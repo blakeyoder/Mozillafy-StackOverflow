@@ -6,11 +6,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.stackoverflow.com/*"],
-      "js": ["swap.js"]
+      "js": ["src/swap.js"]
     }
-  ],
-  "permissions": [
-    "*://api.duckduckgo.com/*",
-    "webRequest"
   ]
 }

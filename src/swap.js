@@ -1,6 +1,5 @@
 const W3_REGEX = 'https?:\/\/(www\.)?w3schools\.com\/*';
 const DDG_URI = 'https://api.duckduckgo.com/?q={QUERY}&format=json';
-const GOOGLE_URL = 'https://google.com/search?query={QUERY}';
 
 fetchW3Links()
   .then(links => replaceWithMDN(links))
@@ -34,12 +33,8 @@ function fetchW3Links() {
 function replaceWithMDN(links) {
   return new Promise(resolve => {
     links.forEach(link => {
-      let searchComponent = encodeURIComponent(partitionAndClean(link));
-      let requestURI = DDG_URI.replace('{QUERY}', searchComponent); 
-      fetch(requestURI)
-        .then(response => response.json())
-        .then(newLink => injectIntoDOM(link, newLink))
-        .catch(err => console.log(err));
+      advertiseW3Link(link);
+      injectSearchBar(link);
     });
   });
 }
@@ -60,11 +55,28 @@ function partitionAndClean(link) {
 }
 
 /**
+ * advertiseW3Link
+ *
+ * @param link
+ * @returns {undefined}
+ */
+function advertiseW3Link(link) {
+  const advertiseText = document.createTextNode(`
+  <-- This is a W3 Schools link`);
+  link.appendChild(advertiseText);
+  link.style = `
+    background-color:yellow`;
+}
+
+/**
  * Swap the W3 href with the MDN href
  *
  * @param link - original dom el
- * @param mdnLink - new link to be injected
  */
-function injectIntoDOM(link, mdnLink) {
-  link.href = mdnLink.AbstractURL;
+function injectSearchBar(link) {
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://duckduckgo.com/search.html?prefill=Search DuckDuckGo';
+  iframe.style ='overflow:hidden;margin:0;padding:0;width:400px;height:40px';
+  iframe.id = 'ddg__iframe';
+  link.appendChild(iframe);
 }
