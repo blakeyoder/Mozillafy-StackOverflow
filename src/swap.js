@@ -1,8 +1,19 @@
 const W3_REGEX = 'https?:\/\/(www\.)?w3schools\.com\/*';
 const DDG_URI = 'https://api.duckduckgo.com/?q={QUERY}&format=json';
+const IFRAME_CSS = new Map([
+  ['overflow', 'hidden'],
+  ['margin', 0],
+  ['padding', 0],
+  ['width', '400px'],
+  ['height', '40px'],
+  ['display', 'none'],
+]);
+const LINK_CSS = new Map([
+  ['background-color', 'yellow']
+])
 
 fetchW3Links()
-  .then(links => replaceWithMDN(links))
+  .then(links => augmentWithSearch(links))
 
 /**
  * Iterate over all links on the page and return only 
@@ -30,7 +41,7 @@ function fetchW3Links() {
  * @param links
  * @returns {Promise} Results of search query
  */
-function replaceWithMDN(links) {
+function augmentWithSearch(links) {
   return new Promise(resolve => {
     links.forEach(link => {
       advertiseW3Link(link);
@@ -46,12 +57,10 @@ function replaceWithMDN(links) {
  * @returns {string}
  */
 function partitionAndClean(link) {
-  let parts = [];
   return link.href.split('/')
     .slice(-1)[0]
-    .split('_')
-    .slice(-1)[0]
     .replace('.asp', '')
+    .split('_');
 }
 
 /**
@@ -61,11 +70,26 @@ function partitionAndClean(link) {
  * @returns {undefined}
  */
 function advertiseW3Link(link) {
-  const advertiseText = document.createTextNode(`
-  <-- This is a W3 Schools link`);
-  link.appendChild(advertiseText);
-  link.style = `
-    background-color:yellow`;
+  let advertiseText = ' ← This is a W3 link.' 
+  const suggestion = searchSuggestion(link);
+  if (!!suggestion) advertiseText = advertiseText.concat(suggestion);
+  const advertiseNode = document.createTextNode(advertiseText);
+  link.appendChild(advertiseNode);
+  setStyles(link, LINK_CSS);
+}
+
+function showEl(el) {
+  el.style.display = 'block';
+}
+
+function hideEl(el) {
+  el.style.display = 'none';
+}
+
+function setStyles(el, styleMap) {
+  styleMap.forEach((val, key) => {
+    el.style[key] = val;
+  });
 }
 
 /**
@@ -76,7 +100,14 @@ function advertiseW3Link(link) {
 function injectSearchBar(link) {
   const iframe = document.createElement('iframe');
   iframe.src = 'https://duckduckgo.com/search.html?prefill=Search DuckDuckGo';
-  iframe.style ='overflow:hidden;margin:0;padding:0;width:400px;height:40px';
   iframe.id = 'ddg__iframe';
+  setStyles(iframe, IFRAME_CSS);
+  link.addEventListener('mouseenter', () => showEl(iframe));
+  link.addEventListener('mouseleave', () => hideEl(iframe));
   link.appendChild(iframe);
+}
+
+function searchSuggestion(link) { 
+  const searchParts = partitionAndClean(link);
+  return (searchParts[0] !== '') ? ` Suggested search: mozilla, ${searchParts.join(', ')}` : null;
 }
