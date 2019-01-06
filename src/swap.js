@@ -1,5 +1,4 @@
 const W3_REGEX = 'https?:\/\/(www\.)?w3schools\.com\/*';
-const MDN_URI = 'https://developer.mozilla.org/en-US/search?q={QUERY}';
 
 const link_css = new Map([
   ['background-color', 'yellow'],
