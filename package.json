@@ -1,9 +1,0 @@
-{
-  "name": "mozillafy",
-  "version": "1.0.0",
-  "description": "Extension to turn W3 links into MDN links",
-  "main": "swap.js",
-  "repository": "git@github.com:blakeyoder/Mozillafy-StackOverflow.git",
-  "author": "Blake Yoder <yoderblake@gmail.com>",
-  "license": "MIT"
-}
