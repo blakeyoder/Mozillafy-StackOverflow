@@ -1,19 +1,33 @@
 const W3_REGEX = 'https?:\/\/(www\.)?w3schools\.com\/*';
-const DDG_URI = 'https://api.duckduckgo.com/?q={QUERY}&format=json';
-const IFRAME_CSS = new Map([
-  ['overflow', 'hidden'],
-  ['margin', 0],
-  ['padding', 0],
-  ['width', '400px'],
-  ['height', '40px'],
-  ['display', 'none'],
+const MDN_URI = 'https://developer.mozilla.org/en-US/search?q={QUERY}';
+
+const link_css = new Map([
+  ['background-color', 'yellow'],
 ]);
-const LINK_CSS = new Map([
-  ['background-color', 'yellow']
-])
+const badge_css = new Map([
+  ['width', '45px'],
+  ['text-align', 'center'],
+  ['border-radius', '10px'],
+  ['background-color', '#c4dd62'],
+  ['box-shadow',  '2px 2px 5px black'],
+  ['margin-bottom',  '8px'],
+]);
+
+// fetch all links within post texts and flatten out to only an a tag array
+const post_links = Array.prototype.reduce.call(document.getElementsByClassName('post-text'),
+  (acc, post_link) => { 
+    const links = post_link.getElementsByTagName('a');
+    Array.prototype.map.call(links, link => acc.push(link));
+    return acc;
+}, []);
 
 fetchW3Links()
-  .then(links => augmentWithSearch(links))
+  .then(links => buildBadge(links))
+  .then(links => {
+    links.forEach(link => {
+      advertiseW3Link(link);
+    })
+  });
 
 /**
  * Iterate over all links on the page and return only 
@@ -23,31 +37,34 @@ fetchW3Links()
  */
 function fetchW3Links() {
   return new Promise(resolve => {
-    const links = document.links;
-    let w3_links = [];
-    for (let link of links) {
+    const w3_links = [];
+    post_links.forEach(link => {
       if (link.href.match(W3_REGEX)) {
         w3_links.push(link);
       }
-    }
+    });
     resolve(w3_links);
   });
 }
 
 /**
- * Makes a query to fetch an MDN resource. This works
- * almost none of the time right now :(
+ * Returns a badge with the percentage of post links
+ * that link to a w3 schools resource
  *
  * @param links
- * @returns {Promise} Results of search query
+ * @returns {array} original parameter for use in the promise chain
  */
-function augmentWithSearch(links) {
-  return new Promise(resolve => {
-    links.forEach(link => {
-      advertiseW3Link(link);
-      injectSearchBar(link);
-    });
-  });
+function buildBadge(links) {
+  if (post_links.length !== 0) {
+    const percentage = Math.floor((links.length / post_links.length) * 100)
+    const headerEl = document.getElementById('question-header');
+    const badgeEl = document.createElement('div');
+    const badgeText = document.createTextNode(`${percentage}%`);
+    setStyles(badgeEl, badge_css);
+    badgeEl.appendChild(badgeText);
+    headerEl.parentNode.insertBefore(badgeEl, headerEl);
+  }
+  return links;
 }
 
 /**
@@ -64,7 +81,7 @@ function partitionAndClean(link) {
 }
 
 /**
- * advertiseW3Link
+ * Highlight link in page
  *
  * @param link
  * @returns {undefined}
@@ -72,39 +89,15 @@ function partitionAndClean(link) {
 function advertiseW3Link(link) {
   let advertiseText = ' ← This is a W3 link.' 
   const suggestion = searchSuggestion(link);
-  if (!!suggestion) advertiseText = advertiseText.concat(suggestion);
   const advertiseNode = document.createTextNode(advertiseText);
   link.appendChild(advertiseNode);
-  setStyles(link, LINK_CSS);
-}
-
-function showEl(el) {
-  el.style.display = 'block';
-}
-
-function hideEl(el) {
-  el.style.display = 'none';
+  setStyles(link, link_css);
 }
 
 function setStyles(el, styleMap) {
   styleMap.forEach((val, key) => {
     el.style[key] = val;
   });
-}
-
-/**
- * Swap the W3 href with the MDN href
- *
- * @param link - original dom el
- */
-function injectSearchBar(link) {
-  const iframe = document.createElement('iframe');
-  iframe.src = 'https://duckduckgo.com/search.html?prefill=Search DuckDuckGo';
-  iframe.id = 'ddg__iframe';
-  setStyles(iframe, IFRAME_CSS);
-  link.addEventListener('mouseenter', () => showEl(iframe));
-  link.addEventListener('mouseleave', () => hideEl(iframe));
-  link.appendChild(iframe);
 }
 
 function searchSuggestion(link) { 
