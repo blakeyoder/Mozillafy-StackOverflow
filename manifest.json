@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozillafy",
   "version": "1.0",
-  "description": "Swap out W3 School links with MDN Doc links on stackoverflow posts which link to W3 School",
+  "description": "Highlight all w3 links in stack overflow answers",
   "content_scripts": [
     {
       "matches": ["*://*.stackoverflow.com/*"],
